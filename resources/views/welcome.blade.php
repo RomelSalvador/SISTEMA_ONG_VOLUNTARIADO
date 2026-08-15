@@ -1,133 +1,540 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'ONG') }} — Voluntariado y Ayuda Social</title>
+    <meta name="description" content="Únete a campañas de voluntariado, súmate a nuestra comunidad y sigue el impacto en tiempo real.">
 
-        <title>Laravel</title>
+    {{-- ============================================================
+         CONTRATO DE DATOS QUE ESPERA ESTA VISTA (pásalos desde el controlador)
+         ------------------------------------------------------------
+         $totalUsuarios  int                 -> Usuario::count()
+         $categorias     Collection          -> CategoriaCampana::withCount('campanas')->where('activo', true)->get()
+         $campanas       Collection          -> Campana::withCount('inscripciones')->with(['categoria','organizador.usuario'])
+                                                  ->where('estado','activa')->latest('fecha_creacion')->take(6)->get()
+                                                  (el withCount agrega $campana->inscripciones_count, usado en el medidor de avance)
+         Todos tienen valores por defecto abajo para que la vista no rompa si faltan.
+    ============================================================ --}}
+    @php
+        $totalUsuarios = $totalUsuarios ?? 0;
+        $categorias = $categorias ?? collect();
+        $campanas = $campanas ?? collect();
+    @endphp
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+    <!-- Fuentes: Fraunces (display, con carácter editorial/botánico), Work Sans (texto), Space Mono (cifras y sellos) -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=fraunces:500,600,600i,700i|work-sans:400,500,600,700|space-mono:400,700&display=swap" rel="stylesheet" />
 
-        <!-- Styles -->
-        <style>
-            /* ! tailwindcss v3.2.4 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Figtree, sans-serif;font-feature-settings:normal}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]{display:none}*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }::-webkit-backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.relative{position:relative}.mx-auto{margin-left:auto;margin-right:auto}.mx-6{margin-left:1.5rem;margin-right:1.5rem}.ml-4{margin-left:1rem}.mt-16{margin-top:4rem}.mt-6{margin-top:1.5rem}.mt-4{margin-top:1rem}.-mt-px{margin-top:-1px}.mr-1{margin-right:0.25rem}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.h-16{height:4rem}.h-7{height:1.75rem}.h-6{height:1.5rem}.h-5{height:1.25rem}.min-h-screen{min-height:100vh}.w-auto{width:auto}.w-16{width:4rem}.w-7{width:1.75rem}.w-6{width:1.5rem}.w-5{width:1.25rem}.max-w-7xl{max-width:80rem}.shrink-0{flex-shrink:0}.scale-100{--tw-scale-x:1;--tw-scale-y:1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.items-center{align-items:center}.justify-center{justify-content:center}.gap-6{gap:1.5rem}.gap-4{gap:1rem}.self-center{align-self:center}.rounded-lg{border-radius:0.5rem}.rounded-full{border-radius:9999px}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity))}.bg-red-50{--tw-bg-opacity:1;background-color:rgb(254 242 242 / var(--tw-bg-opacity))}.bg-dots-darker{background-image:url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(0,0,0,0.07)'/%3E%3C/svg%3E")}.from-gray-700\/50{--tw-gradient-from:rgb(55 65 81 / 0.5);--tw-gradient-to:rgb(55 65 81 / 0);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-transparent{--tw-gradient-to:rgb(0 0 0 / 0);--tw-gradient-stops:var(--tw-gradient-from), transparent, var(--tw-gradient-to)}.bg-center{background-position:center}.stroke-red-500{stroke:#ef4444}.stroke-gray-400{stroke:#9ca3af}.p-6{padding:1.5rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.text-center{text-align:center}.text-right{text-align:right}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.font-semibold{font-weight:600}.leading-relaxed{line-height:1.625}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity))}.text-gray-900{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-gray-500\/20{--tw-shadow-color:rgb(107 114 128 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.selection\:bg-red-500 *::selection{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.selection\:bg-red-500::selection{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.hover\:text-gray-900:hover{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity))}.hover\:text-gray-700:hover{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity))}.focus\:rounded-sm:focus{border-radius:0.125rem}.focus\:outline:focus{outline-style:solid}.focus\:outline-2:focus{outline-width:2px}.focus\:outline-red-500:focus{outline-color:#ef4444}.group:hover .group-hover\:stroke-gray-600{stroke:#4b5563}.z-10{z-index: 10}@media (prefers-reduced-motion: no-preference){.motion-safe\:hover\:scale-\[1\.01\]:hover{--tw-scale-x:1.01;--tw-scale-y:1.01;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}}@media (prefers-color-scheme: dark){.dark\:bg-gray-900{--tw-bg-opacity:1;background-color:rgb(17 24 39 / var(--tw-bg-opacity))}.dark\:bg-gray-800\/50{background-color:rgb(31 41 55 / 0.5)}.dark\:bg-red-800\/20{background-color:rgb(153 27 27 / 0.2)}.dark\:bg-dots-lighter{background-image:url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(255,255,255,0.07)'/%3E%3C/svg%3E")}.dark\:bg-gradient-to-bl{background-image:linear-gradient(to bottom left, var(--tw-gradient-stops))}.dark\:stroke-gray-600{stroke:#4b5563}.dark\:text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity))}.dark\:text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.dark\:shadow-none{--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.dark\:ring-1{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.dark\:ring-inset{--tw-ring-inset:inset}.dark\:ring-white\/5{--tw-ring-color:rgb(255 255 255 / 0.05)}.dark\:hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.group:hover .dark\:group-hover\:stroke-gray-400{stroke:#9ca3af}}@media (min-width: 640px){.sm\:fixed{position:fixed}.sm\:top-0{top:0px}.sm\:right-0{right:0px}.sm\:ml-0{margin-left:0px}.sm\:flex{display:flex}.sm\:items-center{align-items:center}.sm\:justify-center{justify-content:center}.sm\:justify-between{justify-content:space-between}.sm\:text-left{text-align:left}.sm\:text-right{text-align:right}}@media (min-width: 768px){.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:gap-8{gap:2rem}.lg\:p-8{padding:2rem}}
-        </style>
-    </head>
-    <body class="antialiased">
-        <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
-            @if (Route::has('login'))
-                <div class="sm:fixed sm:top-0 sm:right-0 p-6 text-right z-10">
+    <!-- Tailwind autocontenido (no depende de tu build/Vite), con TU paleta inyectada -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Work Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: '#1E73BE',
+                        secondary: '#7CB342',
+                        dark: '#222222',
+                        gray: '#666666',
+                        light: '#F5F5F5',
+                        white: '#FFFFFF',
+                        'primary-light': '#E8F3FF',
+                        'green-light': '#EAF5D5',
+                    },
+                    keyframes: {
+                        'fade-up': { '0%':{opacity:'0',transform:'translateY(20px)'}, '100%':{opacity:'1',transform:'translateY(0)'} },
+                        drift: { '0%,100%':{transform:'translateX(0)'}, '50%':{transform:'translateX(-14px)'} },
+                    },
+                    animation: {
+                        'fade-up': 'fade-up 0.7s ease-out both',
+                        drift: 'drift 9s ease-in-out infinite',
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        .no-scrollbar::-webkit-scrollbar{ display:none; }
+        .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+        .reveal{ opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease; }
+        .reveal.is-visible{ opacity:1; transform:translateY(0); }
+        @media (prefers-reduced-motion: reduce){
+            .reveal{ opacity:1; transform:none; transition:none; }
+            .animate-drift{ animation:none; }
+        }
+        /* Sello: la insignia circular punteada que marca cada dato "verificado" del recorrido */
+        .sello{
+            border: 1.5px dashed currentColor;
+            border-radius: 9999px;
+        }
+        /* Línea de ruta punteada que conecta los pasos de "Cómo funciona" */
+        .ruta-linea{
+            background-image: linear-gradient(to right, currentColor 45%, transparent 0%);
+            background-position: bottom;
+            background-size: 14px 2px;
+            background-repeat: repeat-x;
+        }
+        .ficha-foto{
+            box-shadow: 0 1px 0 #fff, 0 2px 0 #fff, 0 14px 30px -12px rgba(34,34,34,0.35);
+        }
+    </style>
+</head>
+<body class="antialiased font-sans bg-light text-dark">
+
+    <!-- ============================================================
+         NAVBAR — sobre papel, no sobre cristal oscuro
+    ============================================================= -->
+    <header class="sticky top-0 inset-x-0 z-50 bg-light/95 backdrop-blur-sm border-b border-dark/10">
+        <nav class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="{{ url('/') }}" class="flex items-center gap-2.5 group">
+                <span class="sello flex h-9 w-9 items-center justify-center text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-4.5-2.5-8-6-8-10.5A5.5 5.5 0 0112 5a5.5 5.5 0 018 5.5c0 4.5-3.5 8-8 10.5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12v5" />
+                    </svg>
+                </span>
+                <span class="font-display font-semibold text-dark text-lg tracking-tight">ONG</span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray">
+                <a href="#campanas" class="hover:text-dark transition-colors">Campañas</a>
+                <a href="#categorias" class="hover:text-dark transition-colors">Categorías</a>
+                <a href="#impacto" class="hover:text-dark transition-colors">Impacto</a>
+            </div>
+
+            <div class="flex items-center gap-3 text-sm font-semibold">
+                @if (Route::has('login'))
                     @auth
-                        <a href="{{ url('/home') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Home</a>
+                        <a href="{{ url('/home') }}" class="border border-dark/25 text-dark hover:border-dark hover:bg-dark/5 transition-all px-4 py-2 rounded-full">Mi panel</a>
                     @else
-                        <a href="{{ route('login') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Log in</a>
-
+                        <a href="{{ route('login') }}" class="text-gray hover:text-dark transition-colors px-2">Iniciar sesión</a>
                         @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="ml-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Register</a>
+                            <a href="{{ route('register') }}" class="bg-secondary hover:brightness-95 text-white transition-colors px-4 py-2 rounded-full">Quiero ayudar</a>
                         @endif
                     @endauth
-                </div>
-            @endif
+                @endif
+            </div>
+        </nav>
+    </header>
 
-            <div class="max-w-7xl mx-auto p-6 lg:p-8">
-                <div class="flex justify-center">
-                    <svg viewBox="0 0 62 65" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-16 w-auto bg-gray-100 dark:bg-gray-900">
-                        <path d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z" fill="#FF2D20"/>
-                    </svg>
-                </div>
+    <!-- ============================================================
+         HERO — bitácora de campo: titular editorial + sello de conteo en vivo
+    ============================================================= -->
+    <section class="relative overflow-hidden pt-16 pb-24 px-6">
+        <!-- Textura de curvas de nivel (mapa topográfico), muy tenue, propia del trabajo de campo -->
+        <svg class="absolute inset-x-0 top-0 w-full h-[520px] text-secondary/[0.08] pointer-events-none" viewBox="0 0 1400 520" preserveAspectRatio="none" fill="none">
+            <path d="M-50 80 Q 300 20 600 90 T 1450 60" stroke="currentColor" stroke-width="2"/>
+            <path d="M-50 160 Q 320 90 650 170 T 1450 150" stroke="currentColor" stroke-width="2"/>
+            <path d="M-50 240 Q 340 170 700 250 T 1450 230" stroke="currentColor" stroke-width="2"/>
+            <path d="M-50 320 Q 360 250 720 320 T 1450 310" stroke="currentColor" stroke-width="2"/>
+            <path d="M-50 400 Q 380 330 740 400 T 1450 390" stroke="currentColor" stroke-width="2"/>
+        </svg>
 
-                <div class="mt-16">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                        <a href="https://laravel.com/docs" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                                    </svg>
-                                </div>
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center relative">
 
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Documentation</h2>
+            <div class="reveal animate-fade-up" data-reveal>
+                <p class="font-mono text-xs tracking-[0.15em] text-secondary uppercase mb-5"></p>
 
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel has wonderful documentation covering every aspect of the framework. Whether you are a newcomer or have prior experience with Laravel, we recommend reading our documentation from beginning to end.
-                                </p>
-                            </div>
+                <h1 class="font-display text-dark text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight">
+                    <span id="phrase-rotator">Cada hora que das, <em class="italic text-primary">cambia</em> una comunidad.</span>
+                </h1>
 
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
+                <p class="mt-6 text-gray text-lg leading-relaxed max-w-lg">
+                    Únete a campañas activas, elige la causa que te mueve y súmate a una red de voluntarios que ya está transformando su entorno.
+                </p>
 
-                        <a href="https://laracasts.com" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                                    </svg>
-                                </div>
-
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Laracasts</h2>
-
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laracasts offers thousands of video tutorials on Laravel, PHP, and JavaScript development. Check them out, see for yourself, and massively level up your development skills in the process.
-                                </p>
-                            </div>
-
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
-
-                        <a href="https://laravel-news.com" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
-                                    </svg>
-                                </div>
-
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Laravel News</h2>
-
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel News is a community driven portal and newsletter aggregating all of the latest and most important news in the Laravel ecosystem, including new package releases and tutorials.
-                                </p>
-                            </div>
-
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
-
-                        <div class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.314l-.295-.295a1.125 1.125 0 010-1.591l.13-.132a1.125 1.125 0 011.3-.21l.603.302a.809.809 0 001.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 001.528-1.732l.146-.292M6.115 5.19A9 9 0 1017.18 4.64M6.115 5.19A8.965 8.965 0 0112 3c1.929 0 3.716.607 5.18 1.64" />
-                                    </svg>
-                                </div>
-
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Vibrant Ecosystem</h2>
-
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel's robust library of first-party tools and libraries, such as <a href="https://forge.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Forge</a>, <a href="https://vapor.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Vapor</a>, <a href="https://nova.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Nova</a>, and <a href="https://envoyer.io" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Envoyer</a> help you take your projects to the next level. Pair them with powerful open source libraries like <a href="https://laravel.com/docs/billing" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Cashier</a>, <a href="https://laravel.com/docs/dusk" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Dusk</a>, <a href="https://laravel.com/docs/broadcasting" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Echo</a>, <a href="https://laravel.com/docs/horizon" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Horizon</a>, <a href="https://laravel.com/docs/sanctum" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Sanctum</a>, <a href="https://laravel.com/docs/telescope" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Telescope</a>, and more.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="mt-9 flex flex-wrap items-center gap-4">
+                    @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="bg-secondary hover:brightness-95 transition-colors text-white px-6 py-3.5 rounded-full font-semibold">Regístrate como voluntario</a>
+                    @endif
+                    <a href="#campanas" class="text-dark font-semibold px-2 py-3.5 border-b-2 border-dark/20 hover:border-secondary transition-colors">Ver campañas activas →</a>
                 </div>
 
-                <div class="flex justify-center mt-16 px-0 sm:items-center sm:justify-between">
-                    <div class="text-center text-sm sm:text-left">
-                        &nbsp;
+                <!-- Sello de conteo: el elemento distintivo de la página, como el timbre de un registro de campo -->
+                <div class="mt-12 flex items-center gap-5">
+                    <div class="sello -rotate-6 h-20 w-20 shrink-0 flex flex-col items-center justify-center text-primary">
+                        <span id="hero-user-count" class="font-mono font-bold text-xl leading-none" data-count="{{ $totalUsuarios }}">0</span>
+                        <span class="font-mono text-[8px] tracking-wide uppercase mt-1">voluntarios</span>
                     </div>
+                    <p class="text-sm text-gray max-w-[15rem]">Ya son parte de la comunidad y suman horas certificadas cada semana.</p>
+                </div>
+            </div>
 
-                    <div class="text-center text-sm text-gray-500 dark:text-gray-400 sm:text-right sm:ml-0">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
-                    </div>
+            <!-- Fotografía única, tipo ficha de campo pegada al margen -->
+            <div class="relative hidden lg:block reveal" data-reveal>
+                <div class="ficha-foto bg-white p-3 pb-8 -rotate-2 max-w-md ml-auto">
+                    <img src="https://picsum.photos/seed/mv-hero/640/520" alt="Voluntarios trabajando en campaña" class="w-full h-[380px] object-cover">
+                    <p class="font-mono text-xs text-gray mt-3 text-center">Jornada de reforestación · registro fotográfico</p>
+                </div>
+                <div class="sello absolute -top-6 -left-6 h-24 w-24 bg-light flex flex-col items-center justify-center text-secondary rotate-6 animate-drift">
+                    <span class="font-mono font-bold text-xl leading-none" id="hero-chip-count" data-count="{{ $campanas->count() }}">0</span>
+                    <span class="font-mono text-[8px] tracking-wide uppercase mt-1 text-center leading-tight">campañas<br>activas</span>
                 </div>
             </div>
         </div>
-    </body>
+    </section>
+
+    <!-- ============================================================
+         FRANJA DE ESTADÍSTICAS — libro de registro, no tarjetas de vidrio
+    ============================================================= -->
+    <section id="impacto" class="px-6 border-y border-dark/10 bg-white">
+        <div class="max-w-7xl mx-auto grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-dark/10 reveal" data-reveal>
+
+            <div class="py-10 sm:px-10 first:pl-0">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    <p class="font-mono text-xs tracking-wide text-gray uppercase">Voluntarios registrados</p>
+                </div>
+                <p class="font-display text-5xl font-semibold text-dark" id="stat-usuarios" data-count="{{ $totalUsuarios }}">0</p>
+            </div>
+
+            <div class="py-10 sm:px-10">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                    </span>
+                    <p class="font-mono text-xs tracking-wide text-gray uppercase">Campañas activas</p>
+                </div>
+                <p class="font-display text-5xl font-semibold text-secondary" id="stat-campanas" data-count="{{ $campanas->count() }}">0</p>
+            </div>
+
+            <div class="py-10 sm:px-10 sm:pr-0">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    <p class="font-mono text-xs tracking-wide text-gray uppercase">Categorías de ayuda</p>
+                </div>
+                <p class="font-display text-5xl font-semibold text-dark" id="stat-categorias" data-count="{{ $categorias->count() }}">0</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CÓMO FUNCIONA — la ruta: tres paradas sobre una línea de sendero
+    ============================================================= -->
+    <section class="px-6 py-24">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal" data-reveal>
+                <p class="font-mono text-xs tracking-[0.15em] text-primary uppercase">La ruta</p>
+                <h2 class="font-display text-4xl font-semibold mt-2 text-dark">Cómo funciona</h2>
+                <p class="text-gray mt-3 max-w-lg mx-auto">Tres paradas simples entre inscribirte y dejar huella real en tu comunidad.</p>
+            </div>
+
+            <div class="relative grid sm:grid-cols-3 gap-10 reveal" data-reveal>
+                <div class="hidden sm:block absolute top-7 left-[16.5%] right-[16.5%] h-0 ruta-linea text-dark/25"></div>
+
+                <div class="relative text-center">
+                    <span class="sello relative z-10 mx-auto h-14 w-14 flex items-center justify-center bg-light font-mono font-semibold text-primary mb-5">01</span>
+                    <h3 class="font-display font-semibold text-lg text-dark mb-2">Explora causas</h3>
+                    <p class="text-sm text-gray leading-relaxed max-w-xs mx-auto">Revisa las campañas activas y elige la categoría que más se alinee con lo que quieres aportar.</p>
+                </div>
+                <div class="relative text-center">
+                    <span class="sello relative z-10 mx-auto h-14 w-14 flex items-center justify-center bg-light font-mono font-semibold text-secondary mb-5">02</span>
+                    <h3 class="font-display font-semibold text-lg text-dark mb-2">Inscríbete</h3>
+                    <p class="text-sm text-gray leading-relaxed max-w-xs mx-auto">Confirma tu disponibilidad y recibe la información del punto de encuentro.</p>
+                </div>
+                <div class="relative text-center">
+                    <span class="sello relative z-10 mx-auto h-14 w-14 flex items-center justify-center bg-light font-mono font-semibold text-primary mb-5">03</span>
+                    <h3 class="font-display font-semibold text-lg text-dark mb-2">Genera impacto</h3>
+                    <p class="text-sm text-gray leading-relaxed max-w-xs mx-auto">Participa, acumula horas certificadas y sigue tu contribución en tu perfil.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CATEGORÍAS — etiquetas tipo ficha, sin degradados
+    ============================================================= -->
+    <section id="categorias" class="px-6 py-16 bg-white border-y border-dark/10">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-end justify-between mb-8 reveal" data-reveal>
+                <div>
+                    <p class="font-mono text-xs tracking-[0.15em] text-secondary uppercase">Causas</p>
+                    <h2 class="font-display text-3xl font-semibold mt-1 text-dark">Categorías de la ONG</h2>
+                </div>
+            </div>
+
+            <div id="categorias-list" class="flex gap-3 overflow-x-auto no-scrollbar pb-2 reveal" data-reveal>
+                @forelse($categorias as $categoria)
+                    <button
+                        class="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border border-dashed border-secondary/50 text-secondary hover:bg-green-light transition-all"
+                        data-categoria-id="{{ $categoria->id_categoria }}"
+                    >
+                        <span>{{ $categoria->icono ?? '🌱' }}</span>
+                        <span>{{ $categoria->nombre }}</span>
+                        <span class="font-mono text-xs opacity-70">{{ $categoria->campanas_count ?? 0 }}</span>
+                    </button>
+                @empty
+                    <p class="text-gray text-sm">Aún no hay categorías registradas.</p>
+                @endforelse
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CAMPAÑAS RECIENTES — fichas de campo con sello de avance
+    ============================================================= -->
+    <section id="campanas" class="px-6 py-20">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-end justify-between mb-8 reveal" data-reveal>
+                <div>
+                    <p class="font-mono text-xs tracking-[0.15em] text-primary uppercase">Actualidad</p>
+                    <h2 class="font-display text-3xl font-semibold mt-1 text-dark">Campañas recientes</h2>
+                </div>
+                <a href="{{ url('/campanas') }}" class="text-sm font-semibold text-primary hover:underline">Ver todas →</a>
+            </div>
+
+            <div id="campanas-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-7">
+                @forelse($campanas as $campana)
+                    <a href="{{ url('/campanas/'.$campana->id_campana) }}" class="group bg-white border border-dark/10 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl reveal" data-reveal>
+                        <div class="h-44 w-full relative">
+                            <img src="{{ $campana->imagen_banner ?? 'https://picsum.photos/seed/mv-camp'.$campana->id_campana.'/500/300' }}" alt="{{ $campana->nombre }}" class="w-full h-full object-cover">
+                            @if($campana->categoria)
+                                <span class="absolute top-3 left-3 text-xs font-mono font-semibold px-2.5 py-1 text-white bg-dark/80">
+                                    {{ $campana->categoria->nombre }}
+                                </span>
+                            @endif
+
+                            @php
+                                $meta = $campana->meta_voluntarios ?? 0;
+                                $inscritos = $campana->inscripciones_count ?? 0;
+                                $porcentaje = $meta > 0 ? min(100, round(($inscritos / $meta) * 100)) : 0;
+                            @endphp
+                            @if($meta > 0)
+                                <span class="sello absolute -bottom-5 right-4 h-14 w-14 bg-white border-secondary flex items-center justify-center font-mono text-xs font-bold text-secondary shadow-md">
+                                    {{ $porcentaje }}%
+                                </span>
+                            @endif
+                        </div>
+                        <div class="p-5 pt-7">
+                            <h3 class="font-display font-semibold text-lg leading-snug text-dark">{{ $campana->nombre }}</h3>
+                            <p class="text-sm text-gray mt-1.5 line-clamp-2">{{ $campana->descripcion }}</p>
+
+                            @if($meta > 0)
+                                <p class="text-xs text-gray mt-3 font-mono">{{ $inscritos }} de {{ $meta }} voluntarios inscritos</p>
+                            @endif
+
+                            <div class="flex items-center justify-between mt-4 pt-4 border-t border-dark/10 text-xs text-gray">
+                                <span>📍 {{ $campana->lugar }}</span>
+                                <span class="font-mono">{{ \Carbon\Carbon::parse($campana->fecha_inicio)->format('d M') }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <p class="text-gray text-sm col-span-full">Todavía no hay campañas publicadas. ¡Vuelve pronto!</p>
+                @endforelse
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         TESTIMONIO — voz humana sobre papel, sin vidrio
+    ============================================================= -->
+    <section class="px-6 pb-20">
+        <div class="max-w-4xl mx-auto reveal" data-reveal>
+            <div class="bg-white border border-dark/10 p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8">
+                <div class="sello h-24 w-24 shrink-0 p-1 text-secondary">
+                    <img src="https://picsum.photos/seed/mv-testimonial/160" alt="Voluntaria de la ONG" class="h-full w-full rounded-full object-cover">
+                </div>
+                <div>
+                    <p class="font-display italic text-6xl leading-none text-secondary/40 mb-1">&ldquo;</p>
+                    <p class="text-dark text-lg leading-relaxed font-display -mt-4">
+                        Empecé apoyando una sola jornada de reforestación y hoy ya llevo más de 40 horas certificadas. Ver el contador de impacto crecer en tiempo real me motiva a seguir sumando.
+                    </p>
+                    <p class="text-sm text-gray mt-4 font-mono">
+                        Valeria Ríos · voluntaria desde 2024
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CTA FINAL — banda verde a todo lo ancho, sin degradado
+    ============================================================= -->
+    <section class="px-6 pb-24">
+        <div class="relative overflow-hidden max-w-7xl mx-auto px-8 py-16 text-center reveal bg-secondary" data-reveal>
+            <svg class="absolute inset-0 w-full h-full text-white/10 pointer-events-none" viewBox="0 0 1400 300" preserveAspectRatio="none" fill="none">
+                <path d="M-50 40 Q 300 -10 600 50 T 1450 30" stroke="currentColor" stroke-width="2"/>
+                <path d="M-50 120 Q 320 70 650 130 T 1450 110" stroke="currentColor" stroke-width="2"/>
+                <path d="M-50 200 Q 340 150 700 210 T 1450 190" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <div class="relative">
+                <h2 class="font-display text-white text-4xl sm:text-5xl font-semibold max-w-2xl mx-auto leading-tight">
+                    Tu tiempo puede ser el próximo dato en vivo de esta página.
+                </h2>
+                <p class="text-white/85 mt-4 max-w-xl mx-auto">Regístrate en menos de dos minutos y elige la campaña que más te represente.</p>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="inline-block mt-8 px-7 py-3.5 rounded-full font-semibold bg-white text-secondary hover:brightness-95 transition-colors">Unirme ahora</a>
+                @endif
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER
+    ============================================================= -->
+    <footer class="px-6 pt-16 pb-10 bg-dark">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid sm:grid-cols-3 gap-8 text-white/70 text-sm pb-12 border-b border-white/10">
+                <div>
+                    <p class="font-display text-white font-semibold mb-3 text-lg">ONG</p>
+                    <p class="leading-relaxed">Conectamos voluntarios con campañas de ayuda social y ambiental, y mostramos el impacto en tiempo real.</p>
+                </div>
+                <div>
+                    <p class="text-white font-medium mb-3">Explorar</p>
+                    <ul class="space-y-2">
+                        <li><a href="#campanas" class="hover:text-white">Campañas</a></li>
+                        <li><a href="#categorias" class="hover:text-white">Categorías</a></li>
+                        <li><a href="#impacto" class="hover:text-white">Impacto en vivo</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-white font-medium mb-3">Cuenta</p>
+                    <ul class="space-y-2">
+                        @if (Route::has('login'))
+                            <li><a href="{{ route('login') }}" class="hover:text-white">Iniciar sesión</a></li>
+                        @endif
+                        @if (Route::has('register'))
+                            <li><a href="{{ route('register') }}" class="hover:text-white">Registrarme</a></li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sello grande, parte inferior -->
+            <div class="flex flex-col items-center pt-10">
+                <span class="sello flex h-14 w-14 items-center justify-center mb-3 text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-7 w-7">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-4.5-2.5-8-6-8-10.5A5.5 5.5 0 0112 5a5.5 5.5 0 018 5.5c0 4.5-3.5 8-8 10.5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12v5" />
+                    </svg>
+                </span>
+                <p class="font-display text-white text-xl font-semibold tracking-tight">ONG</p>
+                <p class="text-white/50 text-sm mt-2 max-w-sm text-center">Organización sin fines de lucro. Todas las horas y campañas mostradas son verificables dentro de la plataforma.</p>
+
+                <div class="flex items-center gap-3 mt-5">
+                    <a href="#" aria-label="Facebook" class="h-9 w-9 rounded-full border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:border-white/30 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.91h-2.33V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Instagram" class="h-9 w-9 rounded-full border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:border-white/30 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.7"/><circle cx="17.2" cy="6.8" r="1"/></svg>
+                    </a>
+                    <a href="#" aria-label="LinkedIn" class="h-9 w-9 rounded-full border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:border-white/30 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V23h-4V8zm7.5 0h3.8v2.05h.05c.53-1 1.83-2.05 3.77-2.05C19.6 8 21 10.3 21 14.2V23h-4v-7.9c0-1.9-.03-4.3-2.6-4.3-2.6 0-3 2-3 4.1V23H7.9V8z"/></svg>
+                    </a>
+                </div>
+
+                <p class="text-white/40 text-xs mt-6 font-mono">© {{ date('Y') }} · v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         JS — frases rotativas, conteo animado y actualización en vivo
+         (sin cambios de comportamiento respecto a la versión anterior)
+    ============================================================= -->
+    <script>
+        // ---- 1. Frases rotativas del hero ----
+        const frases = [
+            "Cada hora que das, cambia una comunidad.",
+            "Ayudar también se mide: y hoy suma más que ayer.",
+            "Voluntarios reales, impacto que puedes ver en vivo.",
+            "Elige tu causa. La comunidad hace el resto.",
+        ];
+        let fraseIdx = 0;
+        const fraseEl = document.getElementById('phrase-rotator');
+        if (fraseEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            fraseEl.style.transition = 'opacity .3s ease';
+            setInterval(() => {
+                fraseIdx = (fraseIdx + 1) % frases.length;
+                fraseEl.style.opacity = 0;
+                setTimeout(() => {
+                    fraseEl.textContent = frases[fraseIdx];
+                    fraseEl.style.opacity = 1;
+                }, 300);
+            }, 5000);
+        }
+
+        // ---- 2. Conteo animado (cuenta hacia arriba al cargar) ----
+        function animateCount(el, to, duration = 1200) {
+            if (!el) return;
+            const from = 0;
+            const start = performance.now();
+            function step(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(from + (to - from) * eased).toLocaleString('es-PE');
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        function animateAllCounters() {
+            document.querySelectorAll('[data-count]').forEach(el => {
+                animateCount(el, parseInt(el.dataset.count || '0', 10));
+            });
+        }
+        document.addEventListener('DOMContentLoaded', animateAllCounters);
+
+        // ---- 3. Reveal on scroll ----
+        const revealEls = document.querySelectorAll('[data-reveal]');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        revealEls.forEach(el => io.observe(el));
+
+        // ---- 4. Actualización "en tiempo real" por polling ----
+        // Requiere una ruta tipo: Route::get('/api/live-stats', [StatsController::class,'live'])->name('api.live-stats');
+        // que devuelva JSON: { total_usuarios, campanas_activas, categorias_activas }
+        const LIVE_STATS_URL = "{{ Route::has('api.live-stats') ? route('api.live-stats') : '' }}";
+        const POLL_INTERVAL_MS = 20000;
+
+        function refreshLiveStats() {
+            if (!LIVE_STATS_URL) return; // la ruta aún no existe: no falla, simplemente no actualiza
+            fetch(LIVE_STATS_URL, { headers: { 'Accept': 'application/json' } })
+                .then(res => res.ok ? res.json() : Promise.reject(res.status))
+                .then(data => {
+                    const map = {
+                        'stat-usuarios': data.total_usuarios,
+                        'hero-user-count': data.total_usuarios,
+                        'stat-campanas': data.campanas_activas,
+                        'hero-chip-count': data.campanas_activas,
+                        'stat-categorias': data.categorias_activas,
+                    };
+                    Object.entries(map).forEach(([id, value]) => {
+                        if (value === undefined) return;
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        const current = parseInt(el.dataset.count || '0', 10);
+                        if (current !== value) {
+                            el.dataset.count = value;
+                            animateCount(el, value, 800);
+                        }
+                    });
+                })
+                .catch(() => { /* silencioso: se reintenta en el siguiente ciclo */ });
+        }
+        setInterval(refreshLiveStats, POLL_INTERVAL_MS);
+    </script>
+</body>
 </html>
